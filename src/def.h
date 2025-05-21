@@ -17,6 +17,11 @@ typedef float   float32;
 typedef double  float64;
 
 
+#define CDK_TRUE    1
+#define CDK_FALSE   0
+
+
+
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 #   define CDK_PLATFORM_WIN
 #       ifndef _WIN64
