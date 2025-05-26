@@ -6,12 +6,12 @@ cd "$(dirname "$0")"
 # mkdir -p ../bin
 
 
-lib="libcdk.a"
+lib="../bin/libcdk.so"
 
 cFiles=$(find . -type f -name "*.c")
 
 iFlags=-I/storage/Programming/_Engine/CDK/cdk/src
-#lFlags="-lX11 -lvulkan"
+lFlags+="-lX11 -lvulkan"
 defines="-D_DEBUG"
 
 
@@ -21,8 +21,7 @@ gcc -c $cFiles $iFlags
 
 oFiles=$(find . -type f -name "*.o")
 
-echo "building $out ..."
-echo ar -rcs $lib $oFiles
-ar -rcs $lib $oFiles
-# echo gcc $cFiles $cFlags -o "../bin/$out" $defines $iFlags $lFlags
-# gcc $cFiles $cFlags -o "../bin/$out" $defines $iFlags $lFlags
+echo "building $lib ..."
+
+echo gcc -shared -o $lib $cFiles $iFlags $lFlags
+gcc -shared -o $lib $cFiles $iFlags $lFlags
