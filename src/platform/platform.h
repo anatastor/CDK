@@ -12,13 +12,15 @@ typedef struct PlatformState
 
 
 
-uint8 cdk_window_create (PlatformState* pltState,
+uint8 cdk_platform_create (PlatformState* pltState,
         const char* name,
         uint32 x, uint32 y,
         uint32 width, uint32 height);
 
 
-uint8 cdk_window_update (PlatformState *pltState);
+uint8 cdk_platform_update (PlatformState *pltState);
 
 
-void cdk_shutdown (PlatformState* pltState);
+void cdk_platform_shutdown (PlatformState* pltState);
+
+float64 cdk_platform_time (void);

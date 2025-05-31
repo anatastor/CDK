@@ -4,6 +4,7 @@
 
 #if defined(CDK_PLATFORM_WIN)
 
+#include <time.h>
 #include <windows.h>
 #include <windowsx.h> // parameter input extraction 
 
@@ -82,7 +83,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 
-uint8 cdk_window_create (PlatformState* pltState,
+uint8 cdk_platform_create (PlatformState* pltState,
         const char* name,
         uint32 x, uint32 y,
         uint32 width, uint32 height)
@@ -171,10 +172,11 @@ uint8 cdk_window_create (PlatformState* pltState,
 }
 
 
-uint8 cdk_window_update (PlatformState* pltState)
+uint8
+cdk_platform_update (PlatformState* pltState)
 {
     MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0))
+    while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) // peek message for non blocking msg
         DispatchMessage(&msg); // call callback
 
     return running;
@@ -182,11 +184,20 @@ uint8 cdk_window_update (PlatformState* pltState)
 
 
 void
-cdk_shutdown (PlatformState* pltState)
+cdk_platform_shutdown (PlatformState* pltState)
 {   
     InternalState* iState = pltState->iState;
     DestroyWindow (iState->hwnd);
     UnregisterClass (REGISTER_NAME, iState->hInstance);
+}
+
+
+float64
+cdk_platform_time (void)
+{
+    struct timespec time;
+    clock_gettime (CLOCK_MONOTONIC, &time);
+    return time.tv_sec + time.tv_nsec * 0.000000001;
 }
 
 

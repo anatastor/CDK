@@ -6,6 +6,7 @@
 #if defined(CDK_PLATFORM_LINUX)
 
 #include <stdlib.h>
+#include <time.h>
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h> // for receiving keycodes from input
 #include <X11/keysym.h> // for mapping keycodes; list in /usr/include/X11/keysymdef.h
@@ -24,7 +25,7 @@ CDKKeyCodes _translate_keys (uint32 key);
 
 
 uint8
-cdk_window_create (PlatformState* pltState,
+cdk_platform_create (PlatformState* pltState,
         const char* name,
         uint32 x, uint32 y,
         uint32 width, uint32 height)
@@ -60,7 +61,7 @@ cdk_window_create (PlatformState* pltState,
 
 
 uint8
-cdk_window_update (PlatformState* pltState)
+cdk_platform_update (PlatformState* pltState)
 {   
     InternalState* iState = pltState->iState;
     XEvent event;
@@ -133,7 +134,7 @@ cdk_window_update (PlatformState* pltState)
 
 
 void
-cdk_shutdown (PlatformState* pltState)
+cdk_platform_shutdown (PlatformState* pltState)
 {   
     InternalState* iState = pltState->iState;
     XCloseDisplay (iState->display);
@@ -141,10 +142,20 @@ cdk_shutdown (PlatformState* pltState)
 }
 
 
+float64
+cdk_platform_time (void)
+{
+    struct timespec time;
+    clock_gettime (CLOCK_MONOTONIC, &time);
+    return time.tv_sec + time.tv_nsec * 0.000000001;
+}
+
+
 
 CDKKeyCodes
 _translate_keys (uint32 xKey)
-{
+{   
+    // TODO SYSKEYS
     switch (xKey)
     {
         case XK_Left: return CDK_KEY_ARROW_LEFT;
