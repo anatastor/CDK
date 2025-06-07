@@ -6,9 +6,9 @@ cd "$(dirname "$0")"
 # mkdir -p ../bin
 
 
-lib="../bin/libcdk.so"
+lib="bin/libcdk.so"
 
-cFiles=$(find . -type f -name "*.c")
+cFiles=$(find src/ -type f -name "*.c")
 
 iFlags=-I/storage/Programming/_Engine/CDK/cdk/src
 lFlags+="-lX11 -lvulkan"

@@ -11,7 +11,7 @@ for /r %%f in (*.c) do (
 )
 
 
-set iFlags=-I../cdk/src/
+set iFlags=-I../src/
 set lFlags=-L../bin -lcdk -Wl,-rpath,.
 
 set defines=-D_DEBUG

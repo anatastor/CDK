@@ -113,7 +113,7 @@ main (void)
         */
     }
 
-    vulkan_close ();
+    // vulkan_close ();
     cdk_platform_shutdown (&pltState);
 
     test = cdk_darray_destroy (test);

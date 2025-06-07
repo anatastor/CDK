@@ -2,10 +2,10 @@
 setlocal EnableDelayedExpansion
 
 :: set lib=libcdk.a
-set lib=../bin/libcdk.dll
+set lib=bin/libcdk.dll
 
 set cFiles=
-for /r %%f in (*.c) do (
+for /r src\ %%f in (*.c) do (
   set cFiles=!cFiles! %%f
 )
 

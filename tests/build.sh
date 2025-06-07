@@ -8,7 +8,7 @@ out="test"
 
 cFiles=$(find . -type f -name "*.c")
 
-iFlags="-Isrc -I../cdk/src/"
+iFlags="-Isrc -I../src/"
 lFlags="-L../bin -lcdk -Wl,-rpath,. " # -lX11 -lvulkan"
 # lFlags+="-lX11 -lvulkan"
 # lFlags="-L../cdk/ -lcdk -Wl,-rpath,." # -lX11"
