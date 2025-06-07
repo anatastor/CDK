@@ -15,13 +15,13 @@ lFlags+="-lX11 -lvulkan"
 defines="-D_DEBUG"
 
 
-echo "building object files ..."
-echo gcc -c $cFiles $iFlags
-gcc -c $cFiles $iFlags
+# echo "building object files ..."
+# echo gcc -c $cFiles $iFlags
+# gcc -c $cFiles $iFlags
 
-oFiles=$(find . -type f -name "*.o")
+# oFiles=$(find . -type f -name "*.o")
 
 echo "building $lib ..."
 
 echo gcc -shared -o $lib $cFiles $iFlags $lFlags
-gcc -shared -o $lib $cFiles $iFlags $lFlags
+gcc -shared -o $lib $defines $cFiles $iFlags $lFlags

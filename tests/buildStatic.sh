@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set echo on
+mkdir -p ../bin
+
+
+out="test"
+
+cFiles=$(find . -type f -name "*.c")
+
+iFlags="-Isrc -I../cdk/src/"
+# lFlags="-L../bin -lcdk -Wl,-rpath,." # -lX11"
+lFlags="-L../cdk/ -lcdk -Wl,-rpath,. -lX11 -lvulkan"
+# lFlags="-lX11 -lvulkan"
+defines="-D_DEBUG"
+
+
+echo "building $out"
+echo gcc $cFiles $cFlags -o "../bin/$out" $defines $iFlags $lFlags -static
+gcc $cFiles $cFlags -o "../bin/$out" $defines $iFlags $lFlags -static
