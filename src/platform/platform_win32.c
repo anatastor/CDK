@@ -192,6 +192,26 @@ cdk_platform_shutdown (PlatformState* pltState)
 }
 
 
+void
+cdk_platform_console_write (log_level level, const char *msg)
+{
+    uint8 isError = (level == LOG_LEVEL_ERROR || LOG_LEVEL_FATAL);
+
+    HANDLE consoleHandle = GetStdHandle (isError ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo (consoleHandle, &csbi);
+
+    static uint8 colors[6] = {64, 4, 6, 2, 1, 8};
+    SetConsoleTextAttribute (consoleHandle, colors[level]);
+
+    OutputDebugStringA (msg);
+    uint64 length = strlen (msg);
+    WriteConsoleA (consoleHandle, msg, (DWORD) length, 0, 0);
+    
+    SetConsoleTextAttribute (consoleHandle, csbi.wAttributes); // reset color
+}
+
+
 float64
 cdk_platform_time (void)
 {

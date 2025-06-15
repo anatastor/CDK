@@ -1,5 +1,6 @@
 
 #include "logger.h"
+#include "platform/platform.h"
 //#include "asserts.h"
 
 
@@ -43,6 +44,7 @@ logger_log (log_level level, const char *msg, ...)
 
     char logMsg[_LOGGER_BUFFER_SIZE];
     sprintf (logMsg, "%s%s\n", levelStrings[level], outMsg);
-
-    printf ("%s", logMsg);
+    
+    cdk_platform_console_write (level, logMsg);
+    // printf ("%s", logMsg);
 }

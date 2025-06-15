@@ -23,4 +23,6 @@ uint8 cdk_platform_update (PlatformState *pltState);
 
 void cdk_platform_shutdown (PlatformState* pltState);
 
+void cdk_platform_console_write (log_level level, const char* msg);
+
 float64 cdk_platform_time (void);

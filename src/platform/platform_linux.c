@@ -5,6 +5,7 @@
 
 #if defined(CDK_PLATFORM_LINUX)
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <X11/Xlib.h>
@@ -139,6 +140,18 @@ cdk_platform_shutdown (PlatformState* pltState)
     InternalState* iState = pltState->iState;
     XCloseDisplay (iState->display);
     free (pltState->iState);
+}
+
+
+void
+cdk_platform_console_write (log_level level, const char *msg)
+{
+    uint8 isError = (level == LOG_LEVEL_ERROR || LOG_LEVEL_FATAL);
+    // FILE* console = isError ? stderr : stdout;
+    FILE* console = stdout;
+
+    const char* colors[] = {"0;41", "1;31", "1;33", "1;32", "1;34", "1;30"};
+    fprintf (console, "\033[%sm%s\033[0m", colors[level], msg);
 }
 
 

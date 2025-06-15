@@ -11,7 +11,7 @@ lib="bin/libcdk.so"
 cFiles=$(find src/ -type f -name "*.c")
 
 iFlags=-I/storage/Programming/_Engine/CDK/cdk/src
-lFlags+="-lX11 -lvulkan"
+lFlags+="-lX11 -lvulkan -fPIC"
 defines="-D_DEBUG"
 
 
