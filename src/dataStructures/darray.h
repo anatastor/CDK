@@ -25,6 +25,8 @@ void* _cdk_darray_resize (void* array);
 uint64 cdk_darray_capacity (void* array);
 uint64 cdk_darray_length (void* array);
 
+void cdk_darray_set_length (void* array, uint64 length);
+
 void* _cdk_darray_insert (void* array, const void* valuePtr);
 void* _cdk_darray_insertat (void* array, uint64 index, const void* valuePtr);
 

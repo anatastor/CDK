@@ -77,6 +77,14 @@ cdk_darray_length (void* array)
 }
 
 
+void
+cdk_darray_set_length (void* array, uint64 length)
+{
+    _CDKDArrayHeader* header = _cdk_darray_get_header (array);
+    header->length = length;
+}
+
+
 void*
 _cdk_darray_insert (void* array, const void* valuePtr)
 {
