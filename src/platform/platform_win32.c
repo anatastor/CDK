@@ -8,6 +8,9 @@
 #include <windows.h>
 #include <windowsx.h> // parameter input extraction 
 
+
+
+
 #define REGISTER_NAME   "cdkWindow"
 
 
@@ -220,5 +223,23 @@ cdk_platform_time (void)
     return time.tv_sec + time.tv_nsec * 0.000000001;
 }
 
+
+// #ifdef CDK_RENDERER_VULKAN // not working ???
+#include "renderer/renderer_vulkan.inl"
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_win32.h>
+
+VkResult
+cdk_platform_create_vulkan_surface (PlatformState* pltState, VkInstance* instance, VkSurfaceKHR* surface)
+{   
+    InternalState* iState = pltState->iState;
+
+    VkWin32SurfaceCreateInfoKHR createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    createInfo.hwnd = iState->hwnd;
+    createInfo.hinstance = iState->hInstance;
+
+    return vkCreateWin32SurfaceKHR (*instance, &createInfo, NULL, surface);
+}
 
 #endif

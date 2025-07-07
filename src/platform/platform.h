@@ -3,6 +3,7 @@
 
 #include "def.h"
 #include "core/logger.h"
+//#include <vulkan/vulkan.h>
 
 
 typedef struct PlatformState
@@ -26,3 +27,4 @@ void cdk_platform_shutdown (PlatformState* pltState);
 void cdk_platform_console_write (log_level level, const char* msg);
 
 float64 cdk_platform_time (void);
+
