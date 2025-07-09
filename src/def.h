@@ -22,7 +22,6 @@ typedef double  float64;
 #define CDK_FALSE   0
 
 
-
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 #   define CDK_PLATFORM_WIN
 #       ifndef _WIN64
@@ -31,3 +30,5 @@ typedef double  float64;
 #   elif defined(__linux) || defined(__gnu_linux__)
 #       define CDK_PLATFORM_LINUX
 #endif
+
+#define CDK_RENDERER_VULKAN

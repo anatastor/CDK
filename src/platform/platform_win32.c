@@ -1,6 +1,7 @@
 
 #include "platform/platform.h"
 #include "core/input.h"
+#include "dataStructures/darray.h"
 
 #if defined(CDK_PLATFORM_WIN)
 
@@ -228,6 +229,15 @@ cdk_platform_time (void)
 #include "renderer/renderer_vulkan.inl"
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_win32.h>
+#define VK_USE_PLATFORM_WIN32_KHR
+
+
+uint8
+cdk_platform_vulkan_get_required_extensions (const char*** extensions)
+{
+    *extensions = cdk_darray_insert (*extensions, &"VK_KHR_win32_surface");
+    return CDK_TRUE;
+}
 
 VkResult
 cdk_platform_create_vulkan_surface (PlatformState* pltState, VkInstance* instance, VkSurfaceKHR* surface)
