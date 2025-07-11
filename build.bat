@@ -9,18 +9,14 @@ for /r src\ %%f in (*.c) do (
   set cFiles=!cFiles! %%f
 )
 
-set iFlags=-Isrc
+set iFlags=-Isrc -I%VULKAN_SDK%/Include
+set lFlags=-lgdi32 -lvulkan-1 -L%VULKAN_SDK%/Lib
 
-:: -lvulkan" TODO link to vulkan on windows
-set lFlags="-lgdi32"
 set defines=-D_DEBUG
 
-:: echo "building object files ..."
-:: gcc -c %cFiles%
+gcc -shared -o %lib% %defines% %cFiles% %iFlags% %lFlags%
 
-
-gcc -shared -o %lib% %cFiles% %iFlags% %lFlags%
-
+:: in case of static linking
 :: set oFiles=
 :: for /r %%f in (*.o) do (
   :: set oFiles=!cFiles! %%f

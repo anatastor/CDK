@@ -197,6 +197,7 @@ vulkan_init (PlatformState* pltState)
     create_sync_objects ();
 
     vulkanContext.currFrame = 0;
+    vulkanContext.framebufferResized = CDK_FALSE;
 
     cdk_log_info ("Vulkan successfully initialized");
     return CDK_TRUE;
@@ -209,6 +210,8 @@ vulkan_close (void)
     cdk_log_debug ("closing vulkan");
 
     vkDeviceWaitIdle (vulkanContext.device);
+
+    close_swapchain (&vulkanContext);
     
     for (uint32 i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
@@ -219,25 +222,31 @@ vulkan_close (void)
 
     vkDestroyCommandPool (vulkanContext.device, vulkanContext.commandPool, NULL);
     
+    /*
+     * in close_swapchain
     for (uint32 i = 0; i < vulkanContext.imageCount; i++)
         vkDestroyFramebuffer(vulkanContext.device, vulkanContext.framebuffers[i], NULL);
     free (vulkanContext.framebuffers);
     vulkanContext.framebuffers = NULL;
+    */
 
     vkDestroyPipeline (vulkanContext.device, vulkanContext.graphicsPipeline, NULL);
     vkDestroyPipelineLayout (vulkanContext.device, vulkanContext.pipelineLayout, NULL);
     vkDestroyRenderPass (vulkanContext.device, vulkanContext.renderPass, NULL);
     
+    /*
+     * in close_swapchain
     for (uint32 i = 0; i < vulkanContext.imageCount; i++)
         vkDestroyImageView (vulkanContext.device, vulkanContext.imageViews[i], NULL);
     free (vulkanContext.imageViews);
     vulkanContext.imageViews = NULL;
+    */
 
     // TODO allowed or necessary ???
     free (vulkanContext.images);
     vulkanContext.images = NULL;
 
-    vkDestroySwapchainKHR (vulkanContext.device, vulkanContext.swapchain, NULL);
+    // vkDestroySwapchainKHR (vulkanContext.device, vulkanContext.swapchain, NULL);
     vkDestroySurfaceKHR (vulkanContext.instance, vulkanContext.surface, NULL);
     vkDestroyDevice (vulkanContext.device, NULL);
 
@@ -389,11 +398,21 @@ renderer_draw_frame ()
     uint64 currFrame = vulkanContext.currFrame;
 
     vkWaitForFences(vulkanContext.device, 1, &vulkanContext.inFlightFences[currFrame], VK_TRUE, UINT64_MAX);
-    vkResetFences(vulkanContext.device, 1, &vulkanContext.inFlightFences[currFrame]);
 
     uint32 imageIndex;
-    vkAcquireNextImageKHR(vulkanContext.device, vulkanContext.swapchain, UINT64_MAX,
+    VkResult res;
+    res = vkAcquireNextImageKHR(vulkanContext.device, vulkanContext.swapchain, UINT64_MAX,
             vulkanContext.imageAvailableSemaphores[currFrame], VK_NULL_HANDLE, &imageIndex);
+    if (res == VK_ERROR_OUT_OF_DATE_KHR)
+    {
+        recreate_swapchain (&vulkanContext);
+        return CDK_FALSE;
+    }
+    else if (res != VK_SUCCESS && res == VK_SUBOPTIMAL_KHR)
+        cdk_log_warn ("[VULKAN]: failed to acquire swap chain image!");
+
+    vkResetFences(vulkanContext.device, 1, &vulkanContext.inFlightFences[currFrame]); // only reset if something should render
+
 
     vkResetCommandBuffer(vulkanContext.commandBuffers[currFrame], 0);
     record_commandBuffer (vulkanContext.commandBuffers[currFrame], imageIndex);
@@ -431,7 +450,14 @@ renderer_draw_frame ()
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = NULL; // Optional
     
-    vkQueuePresentKHR(vulkanContext.presentQueue, &presentInfo);
+    res = vkQueuePresentKHR(vulkanContext.presentQueue, &presentInfo);
+    if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR || vulkanContext.framebufferResized)
+    {
+        recreate_swapchain (&vulkanContext);
+        vulkanContext.framebufferResized = CDK_FALSE;
+    }
+    else if (res != VK_SUCCESS)
+        cdk_log_warn ("[VULKAN]: failed to present swapchain!");
 
     vulkanContext.currFrame = (currFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 

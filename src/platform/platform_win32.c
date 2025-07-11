@@ -8,7 +8,7 @@
 #include <time.h>
 #include <windows.h>
 #include <windowsx.h> // parameter input extraction 
-
+#include <timeapi.h>
 
 
 
@@ -22,6 +22,9 @@ typedef struct InternalState
     HINSTANCE hInstance;
     HWND hwnd;
 } InternalState;
+
+
+static float64 clockFrequency;
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -99,7 +102,7 @@ uint8 cdk_platform_create (PlatformState* pltState,
     if (ret == 0)
     {
         uint64 errorCode = GetLastError ();
-        cdk_log_error ("win32 error: %lu", errorCode);
+        cdk_log_error ("platform create: win32 error: %lu", errorCode);
         return CDK_FALSE;
     }
 
@@ -126,7 +129,7 @@ uint8 cdk_platform_create (PlatformState* pltState,
     if (RegisterClassExA (&windowClass) == 0)
     {
         uint64 errorCode = GetLastError ();
-        cdk_log_error ("win32 error: %lu", errorCode);
+        cdk_log_error ("RegisterClass win32 error: %lu", errorCode);
         return CDK_FALSE;
     }
   
@@ -161,10 +164,10 @@ uint8 cdk_platform_create (PlatformState* pltState,
         NULL // lParam --> additional parameters/arguments
         );
     
-    if (iState->hwnd)
+    if (!iState->hwnd)
     {
         uint64 errorCode = GetLastError ();
-        cdk_log_error ("win32 error: %lu", errorCode);
+        cdk_log_error ("cannot create window: win32 error: %lu", errorCode);
         return CDK_FALSE;
     }
 
@@ -198,7 +201,8 @@ cdk_platform_shutdown (PlatformState* pltState)
 
 void
 cdk_platform_console_write (log_level level, const char *msg)
-{
+{   
+    // TODO fatal error not correctyl displayed
     uint8 isError = (level == LOG_LEVEL_ERROR || LOG_LEVEL_FATAL);
 
     HANDLE consoleHandle = GetStdHandle (isError ? STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
@@ -218,10 +222,21 @@ cdk_platform_console_write (log_level level, const char *msg)
 
 float64
 cdk_platform_time (void)
-{
+{   
+    /*
     struct timespec time;
     clock_gettime (CLOCK_MONOTONIC, &time);
     return time.tv_sec + time.tv_nsec * 0.000000001;
+    */
+    //return 0.0f;
+
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER time;
+    QueryPerformanceFrequency (&frequency);
+    clockFrequency = 1.0 / (float64) frequency.QuadPart;
+    QueryPerformanceCounter (&time);
+
+    return (float64)time.QuadPart * clockFrequency;
 }
 
 

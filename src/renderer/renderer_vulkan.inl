@@ -36,6 +36,7 @@ typedef struct VulkanContext
     VkPipeline graphicsPipeline;
 
     VkFramebuffer* framebuffers;
+    uint8 framebufferResized;
 
     VkCommandPool commandPool;
     VkCommandBuffer commandBuffers[MAX_FRAMES_IN_FLIGHT];

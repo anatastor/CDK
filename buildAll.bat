@@ -1,5 +1,4 @@
 
-pushd cdk
 call build.bat
 
 pushd tests

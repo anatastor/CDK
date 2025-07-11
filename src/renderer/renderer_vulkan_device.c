@@ -1,6 +1,7 @@
 
 #include "def.h"
 #include "renderer/renderer_vulkan_device.h"
+#include "renderer/renderer_vulkan_framebuffer.h"
 
 #include "core/logger.h"
 #include "dataStructures/darray.h"
@@ -466,6 +467,35 @@ create_swapchain (VulkanContext* context)
     return CDK_TRUE;
 }
 
+void
+close_swapchain(VulkanContext* context)
+{
+    for (uint32 i = 0; i < context->imageCount; i++)
+    {
+        vkDestroyFramebuffer(context->device, context->framebuffers[i], NULL);
+        vkDestroyImageView(context->device, context->imageViews[i], NULL);
+    }
+    free(context->framebuffers);
+    context->framebuffers = NULL;
+    free(context->imageViews);
+    context->imageViews = NULL;
+    vkDestroySwapchainKHR(context->device, context->swapchain, NULL);
+}
+
+uint8
+recreate_swapchain(VulkanContext* context)
+{
+    cdk_log_debug("[Vulkan]: recreating swapchain");
+    vkDeviceWaitIdle(context->device);
+
+    close_swapchain(context);
+
+    create_swapchain(context);
+    create_imageViews(context);
+    create_framebuffer(context);
+
+    return CDK_TRUE;
+}
 
 uint8
 create_imageViews (VulkanContext* context)
