@@ -11,7 +11,5 @@ void vulkan_close (void);
 
 uint8 vulkan_create_surface (PlatformState *pltState);
 
-// void vulkan_get_physical_device (void);
-// void vulkan_create_logical_device (void);
-
+uint8 renderer_draw_frame ();
 

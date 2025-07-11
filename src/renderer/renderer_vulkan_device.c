@@ -15,30 +15,9 @@ static const char* _reqDeviceExtensions[] = {
 static const uint8 _reqDeviceExtensionsCount = 1;
 
 
-typedef struct DeviceQueueIndices
-{
-    uint32 graphicIndex;
-    uint32 presentIndex;
-    uint32 computeIndex;
-    uint32 transferIndex;
-} DeviceQueueIndices;
-
-
-typedef struct SwapchainSupport
-{
-    VkSurfaceCapabilitiesKHR capabilities;
-    VkSurfaceFormatKHR* formats;
-    VkPresentModeKHR* presentModes;
-    uint32 formatCount;
-    uint32 presentModeCount;
-} SwapchainSupport;
-
-
-
 uint8 is_device_suitable (VkPhysicalDevice device, VkSurfaceKHR surface);
 // uint8 create_logical_device (VulkanContext* context, VkDeviceQueueIndicies queuesIndicies);
 
-DeviceQueueIndices fill_DeviceQueueIndicies (VulkanContext* context, DeviceQueueIndices* out);
 uint32* get_unique_queueIndices (DeviceQueueIndices indices); // returns cdk_darray --> free
 uint8 check_device_extension_support (VkPhysicalDevice device); 
 
@@ -164,7 +143,7 @@ create_logical_device (VulkanContext* context)
         VkDeviceQueueCreateInfo createInfo = {0};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         createInfo.queueFamilyIndex = uniqueQueueIndices[i];
-        createInfo.queueCount = 1;
+        createInfo.queueCount = 1; // TODO some graphic card support 2 queues --> multithreading
         createInfo.pQueuePriorities = &queuePriority;
 
         queueCreateInfos = cdk_darray_insert (queueCreateInfos, createInfo);
@@ -294,8 +273,6 @@ get_unique_queueIndices (DeviceQueueIndices indices)
         cdk_darray_insert (queueIndices, indices.presentIndex);
     }
 
-    cdk_log_debug ("[VULKAN] %i unique queueFamilies found (%u)", cdk_darray_length (queueIndices), queueIndices[0]);
-
     return queueIndices;
 }
 
@@ -342,7 +319,7 @@ query_swapchain_support (VkPhysicalDevice device, VkSurfaceKHR surface)
     if (formatCount != 0)
     {
         details.formatCount = formatCount;
-        details.formats = cdk_darray_reserve (VkSurfaceFormatKHR, formatCount); // TODO free!
+        details.formats = cdk_darray_reserve (VkSurfaceFormatKHR, formatCount);
         cdk_darray_set_length (details.formats, formatCount);
         vkGetPhysicalDeviceSurfaceFormatsKHR (device, surface, &formatCount, details.formats);
     }
@@ -352,7 +329,7 @@ query_swapchain_support (VkPhysicalDevice device, VkSurfaceKHR surface)
     if (presentModeCount != 0)
     {
         details.presentModeCount = presentModeCount;
-        details.presentModes = cdk_darray_reserve (VkPresentModeKHR, presentModeCount); // TODO free!
+        details.presentModes = cdk_darray_reserve (VkPresentModeKHR, presentModeCount);
         cdk_darray_set_length (details.presentModes, presentModeCount);
         vkGetPhysicalDeviceSurfacePresentModesKHR (device, surface, &presentModeCount, details.presentModes);
     }
@@ -379,10 +356,11 @@ select_swapchain_format (VkSurfaceFormatKHR* formats)
 VkPresentModeKHR
 select_swapchain_presentMode (VkPresentModeKHR* presentModes)
 {   
+    cdk_log_debug ("[VULKAN]: num of present Modes: %u", cdk_darray_length (presentModes));
     for (uint32 i = 0; i < cdk_darray_length (presentModes); i++)
         if (presentModes[i] == VK_PRESENT_MODE_MAILBOX_KHR) // TODO check other presentModes
         {
-            cdk_log_info ("[VULKAN]: mode %i suports MAILBOX");
+            cdk_log_info ("[VULKAN]: mode %u supports MAILBOX", i);
             return presentModes[i];
         }
 
@@ -475,14 +453,51 @@ create_swapchain (VulkanContext* context)
     }
 
     vkGetSwapchainImagesKHR(context->device, context->swapchain, &imageCount, NULL);
-    context->swapchainImages = malloc (sizeof (VkImage) * imageCount); // TODO free ???
-    vkGetSwapchainImagesKHR(context->device, context->swapchain, &imageCount, context->swapchainImages);
+    context->images = malloc (sizeof (VkImage) * imageCount); // TODO free ???
+    vkGetSwapchainImagesKHR(context->device, context->swapchain, &imageCount, context->images);
+    context->imageCount = imageCount;
 
     
     cdk_darray_destroy (swapchainSupport.formats);
     cdk_darray_destroy (swapchainSupport.presentModes);
-    cdk_darray_destroy (uniqueIndices); // allowed ?
+    cdk_darray_destroy (uniqueIndices);
     
     cdk_log_info ("[VULKAN]: swapchain created successfully");
+    return CDK_TRUE;
+}
+
+
+uint8
+create_imageViews (VulkanContext* context)
+{   
+    cdk_log_debug ("[VULKAN]: creating images");
+    context->imageViews = malloc (sizeof (VkImageView) * context->imageCount);
+    for (uint32 i = 0; i < context->imageCount; i++)
+    {
+        VkImageViewCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        createInfo.image = context->images[i];
+        createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        createInfo.format = context->swapchainImageFormat;
+        createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+        createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+
+        createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        createInfo.subresourceRange.baseMipLevel = 0;
+        createInfo.subresourceRange.levelCount = 1;
+        createInfo.subresourceRange.baseArrayLayer = 0;
+        createInfo.subresourceRange.layerCount = 1;
+
+        VkResult res = vkCreateImageView (context->device, &createInfo, NULL, &context->imageViews[i]);
+        if (res != VK_SUCCESS)
+        {
+            cdk_log_error ("[VULKAN]: unable to create image view (%i)", i);
+            return CDK_FALSE;
+        }
+    }
+
+    cdk_log_info ("[VULKAN]: images created successfully");
     return CDK_TRUE;
 }
