@@ -223,20 +223,20 @@ cdk_platform_console_write (log_level level, const char *msg)
 float64
 cdk_platform_time (void)
 {   
-    /*
-    struct timespec time;
-    clock_gettime (CLOCK_MONOTONIC, &time);
-    return time.tv_sec + time.tv_nsec * 0.000000001;
-    */
-    //return 0.0f;
-
     LARGE_INTEGER frequency;
     LARGE_INTEGER time;
-    QueryPerformanceFrequency (&frequency);
+    QueryPerformanceFrequency (&frequency); // counts per second
     clockFrequency = 1.0 / (float64) frequency.QuadPart;
-    QueryPerformanceCounter (&time);
+    QueryPerformanceCounter (&time); // counts
 
     return (float64)time.QuadPart * clockFrequency;
+}
+
+
+void
+cdk_platform_sleep (uint64 miliseconds)
+{
+    Sleep (miliseconds);
 }
 
 

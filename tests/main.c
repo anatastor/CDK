@@ -1,5 +1,5 @@
-
-#include <stdio.h>
+//
+//#include <stdio.h>
 #include <stdlib.h>
 
 #include <def.h>
@@ -20,6 +20,9 @@
 #else
 #   define PLATFORM "?"
 #endif
+
+
+#define FRAMES_PER_SECOND   60
 
 
 
@@ -45,13 +48,17 @@ main (void)
 
     
     uint8 running = CDK_TRUE;
-    float64 currTime = cdk_platform_time ();
-    float64 lastTime = 0;
     uint64 frameCount = 0;
+    const float64 desiredDeltaTime = 1000.0 / FRAMES_PER_SECOND; // milliseconds
+
+    float64 time = 0.0;
+    float64 avgTime = cdk_platform_time ();
+    float64 lastAvgTime = 0.0;
+    // TODO callback for window resize
+    // TODO callback minimizing window might crash vulkan swapchain
     while (running)
-    {   
-        // TODO callback for window resize
-        // TODO callback minimizing window might crash vulkan swapchain
+    {
+        time = cdk_platform_time ();
         running = cdk_platform_update (&pltState);
         // input_update (0.f);
         uint32 x;
@@ -60,14 +67,20 @@ main (void)
         // cdk_log_info ("mouse (%i, %i)", x, y);
         
         renderer_draw_frame ();
-        frameCount++;
+        
+        float64 deltaTime = (cdk_platform_time () - time) * 1000; // milliseconds
+        uint64 sleepTime = (uint64) (desiredDeltaTime - deltaTime);
+        sleepTime = (sleepTime < 0 || sleepTime > 1000) ? 1 : sleepTime;
+        // cdk_log_debug ("sleeping %u ms; %lf", sleepTime, deltaTime);
+        cdk_platform_sleep (sleepTime);
 
-        if (frameCount % 1000 == 0)
-        {
-            float64 deltaTime = currTime - lastTime;
-            cdk_log_debug ("avg frame time (1000 frames): %lf", (currTime - lastTime) / 1000);
-            lastTime = currTime;
-            currTime = cdk_platform_time ();
+        frameCount++;
+        if (frameCount % 100 == 0)
+        {   
+            float64 dt = cdk_platform_time () - avgTime;
+            avgTime = cdk_platform_time ();
+            cdk_log_debug ("avg frame time (100 frames): %f ms", dt);
+            frameCount = 0;
         }
     }
 

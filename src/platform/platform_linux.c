@@ -161,7 +161,17 @@ cdk_platform_time (void)
 {
     struct timespec time;
     clock_gettime (CLOCK_MONOTONIC, &time);
-    return time.tv_sec + time.tv_nsec * 0.000000001;
+    return (float64) time.tv_sec + (float64) time.tv_nsec * .0000000001;
+}
+
+
+void
+cdk_platform_sleep (uint64 milliseconds)
+{
+    struct timespec ts;
+    ts.tv_sec = milliseconds / 1000.0;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000.0;
+    clock_nanosleep (CLOCK_MONOTONIC, 0, &ts, NULL);
 }
 
 
